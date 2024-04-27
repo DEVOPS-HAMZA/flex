@@ -4,10 +4,10 @@ WORKDIR /app
 
 COPY . .
 
-RUN npm install 
+RUN npm ci
 RUN npm run build 
 
-FROM httpd:alpine3.18
-WORKDIR /usr/local/apache2/htdocs
+FROM nginx:latest
+WORKDIR /usr/share/nginx/html
 
-COPY --from=angular /app/dist/hello/browser ./
+COPY --from=angular /app/dist/flex/browser ./
