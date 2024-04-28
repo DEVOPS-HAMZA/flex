@@ -3,7 +3,16 @@ name: CI/CD Pipeline for Angular Application
 on:
   push:
     branches:
-      - main  # Set this to the branch you want to deploy from
+      - main
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'main'
+      tag:
+        description: 'Docker image tag'
+        required: false
 
 jobs:
   build-and-deploy:
@@ -11,24 +20,26 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.inputs.branch }}
 
     - name: Build Docker Image
       run: |
-        docker build -t hamzadevops/angular-semantic-release:$GITHUB_SHA .
+        docker build -t hamzadevops/angular-semantic-release:${{ github.event.inputs.tag || github.sha }} .
         echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-        docker push hamzadevops/angular-semantic-release:$GITHUB_SHA
+        docker push hamzadevops/angular-semantic-release:${{ github.event.inputs.tag || github.sha }}
+
+    - name: Decode kubeconfig
+      run: echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 -d > ${{ github.workspace }}/kubeconfig.yaml
 
     - name: Set up Kubectl
       uses: azure/setup-kubectl@v1
       with:
         kubeconfig: ${{ github.workspace }}/kubeconfig.yaml
 
-    - name: Decode kubeconfig
-      run: echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 -d > ${{ github.workspace }}/kubeconfig.yaml
-
     - name: Deploy to Kubernetes
       run: |
-        kubectl set image deployment/angular-app-deployment angular-app-container=hamzadevops/angular-semantic-release:$GITHUB_SHA
+        kubectl set image deployment/angular-app-deployment angular-app-container=hamzadevops/angular-semantic-release:${{ github.event.inputs.tag || github.sha }}
         kubectl rollout status deployment/angular-app-deployment
 
     - name: Configure Ingress
