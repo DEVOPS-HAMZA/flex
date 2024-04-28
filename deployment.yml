@@ -48,7 +48,7 @@ items:
     namespace: prod
   spec:
     rules:
-    - host: "143.42.222.111"
+    - host: 143-42-222-111.ip.linodeusercontent.com
       http:
         paths:
         - path: /
