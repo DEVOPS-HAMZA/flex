@@ -18,30 +18,27 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        ref: ${{ github.event.inputs.branch }}
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch || 'main' }}  # Default to main if no branch input
 
-    - name: Build Docker Image
-      run: |
-        docker build -t hamzadevops/angular-semantic-release:${{ github.event.inputs.tag || github.sha }} .
-        echo "${{ secrests.DOCKER_PASSWORD }}" | docker login -u {{ secrets.DOCKER_USERNAME }} --password-stdin
-        docker push hamzadevops/angular-semantic-release:${{ github.event.inputs.tag || github.sha }}
+      - name: Build Docker Image
+        run: |
+          docker build -t hamzadevops/angular-semantic-release:${{ github.event.inputs.tag || github.sha }} .
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          docker push hamzadevops/angular-semantic-release:${{ github.event.inputs.tag || github.sha }}
 
-    - name: Decode kubeconfig
-      run: echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 -d > ${{ github.workspace }}/kubeconfig.yaml
+      - name: Set up Kubeconfig
+        run: |
+          mkdir -p $HOME/.kube  # Ensure the .kube directory exists
+          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
 
-    - name: Set up Kubectl
-      uses: azure/setup-kubectl@v1
-      with:
-        kubeconfig: ${{ github.workspace }}/kubeconfig.yaml
+      - name: Set up Kubectl
+        uses: azure/setup-kubectl@v1
+        with:
+          kubeconfig: $HOME/.kube/config
 
-    - name: Deploy to Kubernetes
-      run: |
-        kubectl set image deployment/angular-app-deployment angular-app-container=hamzadevops/angular-semantic-release:${{ github.event.inputs.tag || github.sha }}
-        kubectl rollout status deployment/angular-app-deployment
-
-    - name: Configure Ingress
-      run: |
-        kubectl patch ingress nginx-ingress-controller -p "{\"spec\":{\"rules\":[{\"host\":\"143.42.222.111\",\"http\":{\"paths\":[{\"path\":\"/\",\"backend\":{\"serviceName\":\"angular-app-service\",\"servicePort\":80}}]}}]}}"
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f deployment.yml -n prod
