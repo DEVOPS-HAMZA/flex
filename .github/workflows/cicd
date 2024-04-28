@@ -1,0 +1,36 @@
+name: CI/CD Pipeline for Angular Application
+
+on:
+  push:
+    branches:
+      - main  # Set this to the branch you want to deploy from
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Build Docker Image
+      run: |
+        docker build -t hamzadevops/angular-semantic-release:$GITHUB_SHA .
+        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        docker push hamzadevops/angular-semantic-release:$GITHUB_SHA
+
+    - name: Set up Kubectl
+      uses: azure/setup-kubectl@v1
+      with:
+        kubeconfig: ${{ github.workspace }}/kubeconfig.yaml
+
+    - name: Decode kubeconfig
+      run: echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 -d > ${{ github.workspace }}/kubeconfig.yaml
+
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl set image deployment/angular-app-deployment angular-app-container=hamzadevops/angular-semantic-release:$GITHUB_SHA
+        kubectl rollout status deployment/angular-app-deployment
+
+    - name: Configure Ingress
+      run: |
+        kubectl patch ingress nginx-ingress-controller -p "{\"spec\":{\"rules\":[{\"host\":\"143.42.222.111\",\"http\":{\"paths\":[{\"path\":\"/\",\"backend\":{\"serviceName\":\"angular-app-service\",\"servicePort\":80}}]}}]}}"
