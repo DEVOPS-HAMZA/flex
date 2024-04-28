@@ -31,7 +31,7 @@ jobs:
 
 
     - name: Decode kubeconfig
-      run: echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 -d > ${{ github.workspace }}/kubeconfig.yaml
+      run: echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
 
     - name: Set up Kubectl
       uses: azure/setup-kubectl@v1
