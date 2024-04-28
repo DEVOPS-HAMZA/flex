@@ -29,7 +29,7 @@ jobs:
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           docker push hamzadevops/angular-semantic-release:${{ github.event.inputs.tag || github.sha }}
 
-      - name: Decode kubeconfig
+      - name: Set up Kubeconfig
         run: echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
 
       - name: Set up Kubectl
