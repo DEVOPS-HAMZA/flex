@@ -42,7 +42,3 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           kubectl apply -f deployment.yml -n prod
-
-      - name: Configure Ingress
-        run: |
-         kubectl patch ingress nginx-ingress-controller -n prod -p "{\"spec\":{\"rules\":[{\"host\":\"143-42-222-111.ip.linodeusercontent.com\",\"http\":{\"paths\":[{\"path\":\"/\",\"backend\":{\"serviceName\":\"angular-app-service\",\"servicePort\":80}}]}}]}}"
