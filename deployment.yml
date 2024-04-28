@@ -33,7 +33,7 @@ items:
     name: angular-app-service
     namespace: prod
   spec:
-    type: ClusterIP  # Change to LoadBalancer if external access is needed directly without Ingress
+    type: LoadBalancer  # Change to LoadBalancer if external access is needed directly without Ingress
     selector:
       app: angular-app
     ports:
