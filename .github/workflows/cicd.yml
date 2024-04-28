@@ -41,8 +41,7 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl set image deployment/angular-app-deployment angular-app-container=hamzadevops/angular-semantic-release:${{ github.event.inputs.tag || github.sha }}
-          kubectl rollout status deployment/angular-app-deployment
+          kubectl apply -f deployment.yml hamzadevops/angular-semantic-release:${{ github.event.inputs.tag || latest }}
 
       - name: Configure Ingress
         run: |
