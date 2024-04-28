@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: List
+items:
+
+# Define the Deployment
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: angular-app-deployment
+    namespace: prod
+  spec:
+    replicas: 3  # Adjust the number of replicas based on your needs
+    selector:
+      matchLabels:
+        app: angular-app
+    template:
+      metadata:
+        labels:
+          app: angular-app
+      spec:
+        containers:
+        - name: angular-app-container
+          image: hamzadevops/angular-semantic-release:latest  # Replace with your specific Docker image tag
+          ports:
+          - containerPort: 80
+        imagePullSecrets:
+        - name: myregistrykey  # Necessary if using a private Docker registry
+
+# Define the Service
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: angular-app-service
+    namespace: prod
+  spec:
+    type: ClusterIP  # Change to LoadBalancer if external access is needed directly without Ingress
+    selector:
+      app: angular-app
+    ports:
+    - port: 80
+      targetPort: 80
+
+# Define the Ingress
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: angular-app-ingress
+    namespace: prod
+  spec:
+    rules:
+    - host: "143.42.222.111"
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: angular-app-service
+              port:
+                number: 80
