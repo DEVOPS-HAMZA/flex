@@ -20,6 +20,13 @@ jobs:
         with:
           fetch-depth: 0 # Ensures all tags and history are fetched
 
+      - name: Get previous tag
+        id: prev_tag
+        uses: WyriHaximus/github-action-get-previous-tag@8a0e045f02c0a3a04e1452df58b90fc7e555e950
+
+      - name: Set environment variables
+        run: echo "TAG=${{ steps.prev_tag.outputs.tag }}" >> $GITHUB_ENV
+
       - name: Retrieve metadata
         id: metadata
         uses: docker/metadata-action@e5622373a38e60fb6d795a4421e56882f2d7a681
