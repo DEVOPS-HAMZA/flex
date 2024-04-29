@@ -19,7 +19,7 @@ items:
         spec:
           containers:
           - name: angular-app-container
-            image: hamzadevops/angular-semantic-release:latest  # Replace with your specific Docker image tag
+            image: hamzadevops/angular-semantic-release:${{ env.TAG }}  # Replace with your specific Docker image tag
             ports:
             - containerPort: 80
           imagePullSecrets:
