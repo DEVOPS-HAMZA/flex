@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # Allows manual trigger from GitHub UI
+  workflow_dispatch:
     inputs:
       branch:
         description: 'Branch to deploy'
@@ -12,22 +12,43 @@ on:
         default: 'main'
 
 jobs:
-  build-and-deploy:
+  build-and-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
         with:
           fetch-depth: 0 # Ensures all tags and history are fetched
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20.9.0'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Semantic Release
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Get previous tag
         id: prev_tag
         uses: WyriHaximus/github-action-get-previous-tag@8a0e045f02c0a3a04e1452df58b90fc7e555e950
 
-      - name: Set environment variables
+      - name: Set environment variables for TAG
         run: echo "TAG=${{ steps.prev_tag.outputs.tag }}" >> $GITHUB_ENV
 
-      - name: Retrieve metadata
+      - name: Retrieve Docker metadata
         id: metadata
         uses: docker/metadata-action@e5622373a38e60fb6d795a4421e56882f2d7a681
         with:
@@ -40,6 +61,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: Build and tag Docker image
         run: |
           echo "Building Docker image with tag ${{ env.TAG }}"
@@ -47,9 +69,14 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: |
-            echo "Pushing image to Docker Hub"
-            docker push hamzadevops/angular-semantic-release:${{ env.TAG }}
-          
+          echo "Pushing image to Docker Hub"
+          docker push hamzadevops/angular-semantic-release:${{ env.TAG }}
+
+  deploy:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
       - name: Set up Kubeconfig
         run: |
           mkdir -p $HOME/.kube
@@ -60,5 +87,5 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          sed -i 's/${IMAGE_TAG}/${{ env.TAG }}/g' deployment.yml
+          sed -i 's/\${IMAGE_TAG}/${{ github.event.inputs.tag }}/g' deployment.yml
           kubectl apply -f deployment.yml
