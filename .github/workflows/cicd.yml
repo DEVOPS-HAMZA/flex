@@ -47,7 +47,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: $GITHUB_ENV
+          tags: ${{ steps.metadata.outputs.tags }}
           build-args: $GITHUB_ENV
 
       - name: Set up Kubeconfig
