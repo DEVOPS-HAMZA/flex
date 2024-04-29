@@ -6,7 +6,7 @@ items:
     kind: Deployment
     metadata:
       name: angular-app-deployment
-      namespace: prod
+      namespace: default
     spec:
       replicas: 3  # Adjust the number of replicas based on your needs
       selector:
@@ -30,7 +30,7 @@ items:
     kind: Service
     metadata:
       name: angular-app-service
-      namespace: prod
+      namespace: default
     spec:
       type: ClusterIP  # Use ClusterIP for internal traffic within the cluster
       selector:
@@ -44,11 +44,11 @@ items:
     kind: Ingress
     metadata:
       name: angular-app-ingress
-      namespace: prod
+      namespace: default
     spec:
-      ingressClassName: "nginx-ingress"
+      ingressClassName: "nginx"
       rules:
-      - host: prod.kotibarva.store
+      - host: 143-42-221-220.ip.linodeusercontent.com
         http:
           paths:
           - path: /
