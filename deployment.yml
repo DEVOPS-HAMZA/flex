@@ -19,7 +19,7 @@ items:
         spec:
           containers:
           - name: angular-app-container
-            image: sha256:8d2647a6b8391a987ab5682bb33b0826bcea094949bccb48ff3ef57170ce9905  # Replace with your specific Docker image tag
+            image: hamzadevops/angular-semantic-release:latest  # Replace with your specific Docker image tag
             ports:
             - containerPort: 80
           imagePullSecrets:
@@ -45,11 +45,10 @@ items:
     metadata:
       name: angular-app-ingress
       namespace: prod
-      annotations:
-        kubernetes.io/ingress.class: "nginx"
     spec:
+      ingressClassName: "nginx"
       rules:
-      - host: 143-42-222-111.ip.linodeusercontent.com
+      - host: prod.kotibarva.store
         http:
           paths:
           - path: /
