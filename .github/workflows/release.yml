@@ -15,6 +15,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '20.9.0'
+      - run: cd
       - run: pwd
       - run: npm ci
       - run: npm run build
