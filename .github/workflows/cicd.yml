@@ -61,5 +61,5 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          sed -i '' 's/\${IMAGE_TAG}/${{ env.TAG }}/g' deployment.yml
+          sed -i 's/${IMAGE_TAG}/${{ env.TAG }}/g' deployment.yml
           kubectl apply -f deployment.yml
