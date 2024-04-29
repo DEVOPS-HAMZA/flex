@@ -3,13 +3,16 @@ name: CI/CD Pipeline for Angular Application
 on:
   push:
     branches:
-      - main
+      - 'feature/*'
   workflow_dispatch:
     inputs:
       branch:
         description: 'Branch to deploy'
         required: true
         default: 'main'
+      tag:
+        description: 'Docker image tag to deploy'
+        required: false
 
 jobs:
   build-and-release:
@@ -36,7 +39,11 @@ jobs:
       - name: Build Project
         run: npm run build
 
-      - name: Semantic Release
+      - name: Run CI Tests
+        run: npm test
+
+      - name: Determine if Semantic Release is Needed
+        if: contains(github.ref, 'features')
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -77,6 +84,9 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' }}
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
       - name: Set up Kubeconfig
         run: |
           mkdir -p $HOME/.kube
