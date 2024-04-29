@@ -9,12 +9,13 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
           node-version: '20.9.0'
+      - run: echo $KUBECONFIG
       - run: npm ci
       - run: npm run build
       - run: npx semantic-release
