@@ -62,4 +62,5 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl set image deployment/angular-app-deployment my-container=hamzadevops/angular-semantic-release:${{ env.TAG }} --record
+          sed -i 's/${IMAGE_TAG}/${{ env.TAG }}/g' deployment.yml
+          kubectl apply -f deployment.yml
