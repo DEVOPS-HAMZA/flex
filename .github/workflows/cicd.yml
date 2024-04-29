@@ -23,11 +23,14 @@ jobs:
         with:
           ref: ${{ github.event.inputs.branch || 'main' }}  # Default to main if no branch input
 
+      - name: Set Image Tag
+        run: echo "IMAGE_TAG=${{ github.event.inputs.tag || github.sha }}" | cut -c 1-6 > $GITHUB_ENV
+
       - name: Build Docker Image
         run: |
-          docker build -t hamzadevops/angular-semantic-release:${{ github.event.inputs.tag || github.sha[:6] }} .
+          docker build -t hamzadevops/angular-semantic-release:$IMAGE_TAG .
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker push hamzadevops/angular-semantic-release:${{ github.event.inputs.tag || github.sha[:6] }}
+          docker push hamzadevops/angular-semantic-release:$IMAGE_TAG
 
       - name: Set up Kubeconfig
         run: |
@@ -41,4 +44,4 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl set image deployment.yml  angular-app-deployment=hamzadevops/angular-semantic-release:${{ github.event.inputs.tag || github.sha[:6] }} --record
+          kubectl set image deployment/angular-app-deployment my-container=hamzadevops/angular-semantic-release:$IMAGE_TAG --record
