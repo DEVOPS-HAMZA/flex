@@ -15,8 +15,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '20.9.0'
-      - run: cd /home/ubuntu
-      - run: pwd
+      - run: cat titi.txt
       - run: npm ci
       - run: npm run build
       - run: npx semantic-release
