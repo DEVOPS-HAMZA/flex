@@ -10,31 +10,47 @@ on:
         description: 'Branch to deploy'
         required: true
         default: 'main'
-      tag:
-        description: 'Docker image tag'
-        required: false
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v2
         with:
-          ref: ${{ github.event.inputs.branch || 'main' }}  # Default to main if no branch input
+          fetch-depth: 0 # Ensures all tags and history are fetched
 
-      - name: Set Image Tag
-        run: echo "IMAGE_TAG=${{ github.event.inputs.tag || github.sha }}" | cut -c 1-6 > $GITHUB_ENV
+      - name: Get tag
+        id: tag
+        uses: WyriHaximus/github-action-get-previous-tag@8a0e045f02c0a3a04e1452df58b90fc7e555e950
 
-      - name: Build Docker Image
+      - name: Set correct environment
         run: |
-          docker build -t hamzadevops/angular-semantic-release:$IMAGE_TAG .
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker push hamzadevops/angular-semantic-release:$IMAGE_TAG
+          TAG=${{ steps.tag.outputs.tag }}
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Retrieve metadata
+        id: metadata
+        uses: docker/metadata-action@e5622373a38e60fb6d795a4421e56882f2d7a681
+        with:
+          images: hamzadevops/angular-semantic-release
+          tags: |
+            type=semver,pattern={{major}}.{{minor}}.{{patch}},value=${{ env.TAG }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG }}
+            type=semver,pattern={{major}},value=${{ env.TAG }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: ${{ steps.metadata.outputs.tags }}
 
       - name: Set up Kubeconfig
         run: |
-          mkdir -p $HOME/.kube  # Ensure the .kube directory exists
+          mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
 
       - name: Set up Kubectl
@@ -44,4 +60,4 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl set image deployment/angular-app-deployment my-container=hamzadevops/angular-semantic-release:$IMAGE_TAG --record
+          kubectl set image deployment/angular-app-deployment my-container=hamzadevops/angular-semantic-release:${{ env.TAG }} --record
