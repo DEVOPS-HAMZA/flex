@@ -47,8 +47,8 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ${{ steps.metadata.outputs.tags }}
-          build-args: SOME_ARG=${{ env.TAG }}
+          tags: $GITHUB_ENV
+          build-args: $GITHUB_ENV
 
       - name: Set up Kubeconfig
         run: |
@@ -60,5 +60,5 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          sed -i 's/${IMAGE_TAG}/${{ env.TAG }}g' deployment.yml
+          sed -i 's/${IMAGE_TAG}/${{ env.TAG }}/g' deployment.yml
           kubectl apply -f deployment.yml
