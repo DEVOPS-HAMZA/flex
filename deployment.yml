@@ -46,7 +46,7 @@ items:
       name: angular-app-ingress
       namespace: prod
     spec:
-      ingressClassName: "nginx"
+      ingressClassName: "nginx-ingress"
       rules:
       - host: prod.kotibarva.store
         http:
