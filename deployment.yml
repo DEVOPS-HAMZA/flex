@@ -48,7 +48,7 @@ items:
     spec:
       ingressClassName: "nginx"
       rules:
-      - host: 143-42-221-220.ip.linodeusercontent.com
+      - host: 39-144-161-241.ip.linodeusercontent.com
         http:
           paths:
           - path: /
