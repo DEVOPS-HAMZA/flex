@@ -20,7 +20,7 @@ jobs:
         with:
           fetch-depth: 0 # Ensures all tags and history are fetched
 
-      - name: Get tag
+      - name: Get previous tag
         id: tag
         uses: WyriHaximus/github-action-get-previous-tag@8a0e045f02c0a3a04e1452df58b90fc7e555e950
 
@@ -31,6 +31,11 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        if: steps.metadata.outputs.tags != ''
 
       - name: Retrieve metadata
         id: metadata
@@ -47,6 +52,8 @@ jobs:
         with:
           push: true
           tags: ${{ steps.metadata.outputs.tags }}
+          build-args: |
+            SOME_ARG=${{ env.SOME_ENV_VARIABLE }}
 
       - name: Set up Kubeconfig
         run: |
